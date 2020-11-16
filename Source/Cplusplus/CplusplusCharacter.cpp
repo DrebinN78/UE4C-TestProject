@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CplusplusCharacter.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -45,7 +44,13 @@ ACplusplusCharacter::ACplusplusCharacter()
 
 	//Create the grab point
 	GrabPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Grab Point"));
-
+	GrabPoint->SetupAttachment(RootComponent);
+	FVector GPOffset;
+	GPOffset.X = 100.0f;
+	GPOffset.Y = 0.0f;
+	GPOffset.Z = 50.0f;
+	GrabPoint->AddLocalOffset(GPOffset);
+	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -61,6 +66,7 @@ void ACplusplusCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	PlayerInputComponent->BindAction("GrabObject", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
+	PlayerInputComponent->BindAction("ReleaseObject", IE_Pressed, this, &ACplusplusCharacter::ReleaseObject);
 	PlayerInputComponent->BindAction("FirePaintGun", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACplusplusCharacter::MoveForward);
@@ -114,15 +120,36 @@ void ACplusplusCharacter::GrabObject()
 
 		if (hitresult.Component->Mobility == EComponentMobility::Movable)
 		{
-			hitresult.Component->SetEnableGravity(false);
-
+			SetGrabbedComponent(hitresult.Component.Get());
+			hitresult.GetComponent()->SetEnableGravity(false);
+			hitresult.GetComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 	}
 }
 
+void ACplusplusCharacter::ReleaseObject(){
+	if (GetGrabbedComponent() != nullptr)
+	{
+		GetGrabbedComponent()->SetEnableGravity(true);
+		GetGrabbedComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	}
+}
+
+
 void ACplusplusCharacter::FirePaintGun()
 {
 
+}
+
+void ACplusplusCharacter::BeginPlay()
+{
+	GetController()->Possess(this);
+}
+
+void ACplusplusCharacter::SetGrabbedComponent(UPrimitiveComponent* Componenttograb)
+{
+
+	GrabbedComponent = Componenttograb;
 }
 
 void ACplusplusCharacter::MoveForward(float Value)

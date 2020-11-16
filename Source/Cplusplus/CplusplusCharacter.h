@@ -24,7 +24,8 @@ class ACplusplusCharacter : public ACharacter
 	class USceneComponent* GrabPoint;
 public:
 	ACplusplusCharacter();
-
+ 
+	UPrimitiveComponent* GrabbedComponent;
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -55,7 +56,11 @@ protected:
 
 	void GrabObject();
 
+	void ReleaseObject();
+
 	void FirePaintGun();
+
+	void SetGrabbedComponent(UPrimitiveComponent* Componenttograb);
 
 	/** Handler for when a touch input begins. */
 	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
@@ -68,10 +73,16 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
 
+	virtual void BeginPlay() override;
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	/** Returns Grab Point subobject **/
+	FORCEINLINE class USceneComponent* GetGrabPoint() const { return GrabPoint; }
+
+	FORCEINLINE class UPrimitiveComponent* GetGrabbedComponent() const { return GrabbedComponent; }
 };
 
