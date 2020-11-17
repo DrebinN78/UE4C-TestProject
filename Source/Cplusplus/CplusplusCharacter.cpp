@@ -20,6 +20,9 @@ ACplusplusCharacter::ACplusplusCharacter()
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
+	// Set our Health
+	Health = 100.0f;
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -154,8 +157,10 @@ void ACplusplusCharacter::SetGrabbedComponent(UPrimitiveComponent* Componenttogr
 
 void ACplusplusCharacter::MoveForward(float Value)
 {
+	
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Attempting to move Forward"));
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
