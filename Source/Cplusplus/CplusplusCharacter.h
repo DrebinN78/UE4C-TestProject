@@ -82,7 +82,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	/** Returns Grab Point subobject **/
 	FORCEINLINE class USceneComponent* GetGrabPoint() const { return GrabPoint; }
-
+	/** Returns Grabbed Component**/
 	FORCEINLINE class UPrimitiveComponent* GetGrabbedComponent() const { return GrabbedComponent; }
 };
 

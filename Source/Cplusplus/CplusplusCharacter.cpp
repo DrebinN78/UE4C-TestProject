@@ -113,16 +113,16 @@ void ACplusplusCharacter::GrabObject()
 {
 	FHitResult hitresult;
 	FVector startVector = GetActorLocation();
-	FVector endVector = GetActorForwardVector() * 300;
-	FCollisionQueryParams params;
+	FVector endVector = GetActorLocation() + (GetActorForwardVector() * 300);
 
 	if (ActorLineTraceSingle(hitresult, startVector, endVector, ECC_Visibility, NULL)){
 
 		if (hitresult.Component->Mobility == EComponentMobility::Movable)
 		{
 			SetGrabbedComponent(hitresult.Component.Get());
-			hitresult.GetComponent()->SetEnableGravity(false);
-			hitresult.GetComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			GetGrabbedComponent()->SetEnableGravity(false);
+			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			GetGrabbedComponent()->ComponentVelocity = FVector(0.0f, 0.0f, 0.0f);
 		}
 	}
 }
@@ -132,6 +132,7 @@ void ACplusplusCharacter::ReleaseObject(){
 	{
 		GetGrabbedComponent()->SetEnableGravity(true);
 		GetGrabbedComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		SetGrabbedComponent(nullptr);
 	}
 }
 
@@ -148,7 +149,6 @@ void ACplusplusCharacter::BeginPlay()
 
 void ACplusplusCharacter::SetGrabbedComponent(UPrimitiveComponent* Componenttograb)
 {
-
 	GrabbedComponent = Componenttograb;
 }
 
