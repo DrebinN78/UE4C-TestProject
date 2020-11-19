@@ -70,6 +70,7 @@ void ACplusplusCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("WriteSave", IE_Pressed, this, &ACplusplusCharacter::WriteSave);
 
 	PlayerInputComponent->BindAction("GrabObject", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
 	PlayerInputComponent->BindAction("ReleaseObject", IE_Released, this, &ACplusplusCharacter::ReleaseObject);
@@ -158,6 +159,20 @@ void ACplusplusCharacter::FirePaintGun()
 		}
 	}
 	
+}
+
+void ACplusplusCharacter::WriteSave()
+{
+	UMySaveGame* save = Cast<UMySaveGame>(UGameplayStatics::CreateSaveGameObject(USaveGame::StaticClass()));
+	save->SetSaveData(GetActorLocation(), GetActorRotation(), health);
+	UGameplayStatics::SaveGameToSlot(save, TEXT("GameSaveFile"), 0);
+}
+
+void ACplusplusCharacter::LoadFromSave(UMySaveGame* save)
+{
+	SetActorLocation(save->playerLocationData);
+	SetActorRotation(save->playerRotationData);
+	health = save->playerHealthData;
 }
 
 void ACplusplusCharacter::BeginPlay()

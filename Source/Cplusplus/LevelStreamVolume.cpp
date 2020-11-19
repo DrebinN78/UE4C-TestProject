@@ -21,7 +21,6 @@ void ALevelStreamVolume::BeginPlay()
 
 void ALevelStreamVolume::UpdateStreamedLevels()
 {
-	
 	for (FName level : LevelsToUnload)
 	{
 		FLatentActionInfo LatentInfo;
@@ -32,10 +31,9 @@ void ALevelStreamVolume::UpdateStreamedLevels()
 	for (FName level : LevelsToLoad)
 	{
 		FLatentActionInfo LatentInfo;
-		UGameplayStatics::LoadStreamLevel(GetWorld(), level, true, true, LatentInfo);
+		UGameplayStatics::LoadStreamLevel(this, level, true, false, LatentInfo);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Loaded : ") + level.GetPlainNameString());
 	}
-	
 }
 
 // Called every frame

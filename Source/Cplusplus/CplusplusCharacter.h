@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "MySaveGame.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
@@ -78,6 +80,12 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void FirePaintGun();
+
+	UFUNCTION(BlueprintCallable)
+	void WriteSave();
+
+	UFUNCTION(BlueprintCallable)
+	void LoadFromSave(UMySaveGame* save);
 
 	UFUNCTION(BlueprintCallable)
 	void Respawn();
