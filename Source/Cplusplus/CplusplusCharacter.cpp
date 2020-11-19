@@ -123,11 +123,13 @@ void ACplusplusCharacter::GrabObject()
 	FVector endVector = GetCapsuleComponent()->GetComponentLocation() + (GetCapsuleComponent()->GetForwardVector() * 300.0f);
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	if (hitresult.GetComponent()->Mobility == EComponentMobility::Movable)
-	{
-		SetGrabbedComponent(hitresult.GetComponent());
-		GetGrabbedComponent()->SetEnableGravity(false);
-		GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+	if (GetWorld()->LineTraceSingleByChannel(hitresult, startVector, endVector, ECC_Visibility, CollisionParams)) {
+		if (hitresult.Actor->IsRootComponentMovable())
+		{
+			SetGrabbedComponent(hitresult.GetComponent());
+			GetGrabbedComponent()->SetEnableGravity(false);
+			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+		}
 	}
 	
 }
@@ -155,7 +157,7 @@ void ACplusplusCharacter::FirePaintGun()
 		{
 			paintStain->SetDecalMaterial(DecalMaterial);
 			paintStain->SetLifeSpan(5.0f);
-			paintStain->GetDecal()->DecalSize = FVector(20.0f, 20.0f, 20.0f);
+			paintStain->GetDecal()->DecalSize = FVector(75.0f, 75.0f, 75.0f);
 		}
 	}
 	
