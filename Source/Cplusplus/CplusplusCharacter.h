@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Engine/World.h"
+#include "Engine/DecalActor.h"
+#include "Components/DecalComponent.h"
 #include "CplusplusCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -28,7 +31,16 @@ public:
 	UPrimitiveComponent* GrabbedComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = Character)
-	float Health;
+	float health;
+
+	UPROPERTY(VisibleAnywhere, Category = Character)
+	FVector spawnPosition;
+
+	UPROPERTY(VisibleAnywhere, Category = Character)
+	FRotator spawnRotation;
+
+	UPROPERTY(EditAnywhere, Category = Character)
+	UMaterialInstance* DecalMaterial;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -58,11 +70,17 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
+	UFUNCTION(BlueprintCallable)
 	void GrabObject();
 
+	UFUNCTION(BlueprintCallable)
 	void ReleaseObject();
 
+	UFUNCTION(BlueprintCallable)
 	void FirePaintGun();
+
+	UFUNCTION(BlueprintCallable)
+	void Respawn();
 
 	void SetGrabbedComponent(UPrimitiveComponent* Componenttograb);
 
@@ -78,6 +96,8 @@ protected:
 	// End of APawn interface
 
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Returns CameraBoom subobject **/

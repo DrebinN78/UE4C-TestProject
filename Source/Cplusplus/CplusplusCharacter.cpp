@@ -7,12 +7,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "PhysicsEngine/BodyInstance.h"
+#include "DrawDebugHelpers.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACplusplusCharacter
 
 ACplusplusCharacter::ACplusplusCharacter()
 {
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -21,7 +24,7 @@ ACplusplusCharacter::ACplusplusCharacter()
 	BaseLookUpRate = 45.f;
 
 	// Set our Health
-	Health = 100.0f;
+	health = 100.0f;
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -69,8 +72,8 @@ void ACplusplusCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	PlayerInputComponent->BindAction("GrabObject", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
-	PlayerInputComponent->BindAction("ReleaseObject", IE_Pressed, this, &ACplusplusCharacter::ReleaseObject);
-	PlayerInputComponent->BindAction("FirePaintGun", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
+	PlayerInputComponent->BindAction("ReleaseObject", IE_Released, this, &ACplusplusCharacter::ReleaseObject);
+	PlayerInputComponent->BindAction("FirePaintGun", IE_Pressed, this, &ACplusplusCharacter::FirePaintGun);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACplusplusCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACplusplusCharacter::MoveRight);
@@ -115,26 +118,24 @@ void ACplusplusCharacter::LookUpAtRate(float Rate)
 void ACplusplusCharacter::GrabObject()
 {
 	FHitResult hitresult;
-	FVector startVector = GetActorLocation();
-	FVector endVector = GetActorLocation() + (GetActorForwardVector() * 300);
-
-	if (ActorLineTraceSingle(hitresult, startVector, endVector, ECC_Visibility, NULL)){
-
-		if (hitresult.Component->Mobility == EComponentMobility::Movable)
-		{
-			SetGrabbedComponent(hitresult.Component.Get());
-			GetGrabbedComponent()->SetEnableGravity(false);
-			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			GetGrabbedComponent()->ComponentVelocity = FVector(0.0f, 0.0f, 0.0f);
-		}
+	FVector startVector = GetCapsuleComponent()->GetComponentLocation();
+	FVector endVector = GetCapsuleComponent()->GetComponentLocation() + (GetCapsuleComponent()->GetForwardVector() * 300.0f);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	if (hitresult.GetComponent()->Mobility == EComponentMobility::Movable)
+	{
+		SetGrabbedComponent(hitresult.GetComponent());
+		GetGrabbedComponent()->SetEnableGravity(false);
+		GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
 	}
+	
 }
 
 void ACplusplusCharacter::ReleaseObject(){
 	if (GetGrabbedComponent() != nullptr)
 	{
 		GetGrabbedComponent()->SetEnableGravity(true);
-		GetGrabbedComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		GetGrabbedComponent()->DetachFromComponent(FDetachmentTransformRules::FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
 		SetGrabbedComponent(nullptr);
 	}
 }
@@ -142,12 +143,45 @@ void ACplusplusCharacter::ReleaseObject(){
 
 void ACplusplusCharacter::FirePaintGun()
 {
-
+	FHitResult hitresult;
+	FVector startVector = GetCapsuleComponent()->GetComponentLocation();
+	FVector endVector = GetCapsuleComponent()->GetComponentLocation() + (GetCapsuleComponent()->GetForwardVector() * 300.0f);
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(hitresult, startVector, endVector, ECC_Visibility, CollisionParams)){
+		ADecalActor* paintStain = GetWorld()->SpawnActor<ADecalActor>(hitresult.Location, FRotator(90.0f, 0.0f, 0.0f));
+		if(paintStain)
+		{
+			paintStain->SetDecalMaterial(DecalMaterial);
+			paintStain->SetLifeSpan(5.0f);
+			paintStain->GetDecal()->DecalSize = FVector(20.0f, 20.0f, 20.0f);
+		}
+	}
+	
 }
 
 void ACplusplusCharacter::BeginPlay()
 {
+	Super::BeginPlay();
+	spawnPosition = GetActorLocation();
+	spawnRotation = GetActorRotation();
 	GetController()->Possess(this);
+}
+
+void ACplusplusCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	if (health <= 0.0f)
+	{
+		Respawn();
+	}
+}
+
+void ACplusplusCharacter::Respawn()
+{
+	SetActorLocation(spawnPosition);
+	SetActorRotation(spawnRotation);
+	health = 100.0f;
 }
 
 void ACplusplusCharacter::SetGrabbedComponent(UPrimitiveComponent* Componenttograb)
@@ -160,7 +194,7 @@ void ACplusplusCharacter::MoveForward(float Value)
 	
 	if ((Controller != NULL) && (Value != 0.0f))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Attempting to move Forward"));
+		
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
