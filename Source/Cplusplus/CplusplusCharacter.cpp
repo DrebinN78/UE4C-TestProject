@@ -17,7 +17,7 @@ ACplusplusCharacter::ACplusplusCharacter()
 {
 
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(20.0f, 96.0f);
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -52,7 +52,7 @@ ACplusplusCharacter::ACplusplusCharacter()
 	GrabPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Grab Point"));
 	GrabPoint->SetupAttachment(RootComponent);
 	FVector GPOffset;
-	GPOffset.X = 100.0f;
+	GPOffset.X = 120.0f;
 	GPOffset.Y = 0.0f;
 	GPOffset.Z = 50.0f;
 	GrabPoint->AddLocalOffset(GPOffset);
@@ -128,7 +128,7 @@ void ACplusplusCharacter::GrabObject()
 		{
 			SetGrabbedComponent(hitresult.GetComponent());
 			GetGrabbedComponent()->SetEnableGravity(false);
-			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true));
 		}
 	}
 	
