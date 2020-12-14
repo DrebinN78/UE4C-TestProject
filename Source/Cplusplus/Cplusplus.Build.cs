@@ -7,8 +7,8 @@ public class Cplusplus : ModuleRules
 	public Cplusplus(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		bUseUnity = true;
 		MinFilesUsingPrecompiledHeaderOverride = 1;
-		bUseUnity = false;
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 	}
 }

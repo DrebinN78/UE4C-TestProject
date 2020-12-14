@@ -24,14 +24,14 @@ void ALevelStreamVolume::UpdateStreamedLevels()
 	for (FName level : LevelsToUnload)
 	{
 		FLatentActionInfo LatentInfo;
-		UGameplayStatics::UnloadStreamLevel(this, level, LatentInfo, false);
+		UGameplayStatics::UnloadStreamLevel(GetWorld(), level, LatentInfo, false);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Unloaded : ") + level.GetPlainNameString());
 	}
 	
 	for (FName level : LevelsToLoad)
 	{
 		FLatentActionInfo LatentInfo;
-		UGameplayStatics::LoadStreamLevel(this, level, true, false, LatentInfo);
+		UGameplayStatics::LoadStreamLevel(GetWorld(), level, true, true, LatentInfo);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Loaded : ") + level.GetPlainNameString());
 	}
 }

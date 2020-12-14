@@ -1,14 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
+#pragma once
 
-#include "CplusplusCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "CplusplusCharacter.h"
 #include "PhysicsEngine/BodyInstance.h"
-#include "DrawDebugHelpers.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACplusplusCharacter
@@ -48,7 +48,11 @@ ACplusplusCharacter::ACplusplusCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	//Create the grab point
+	// Create the audio component
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+
+	// Create the grab point
 	GrabPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Grab Point"));
 	GrabPoint->SetupAttachment(RootComponent);
 	FVector GPOffset;
@@ -71,6 +75,7 @@ void ACplusplusCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("WriteSave", IE_Pressed, this, &ACplusplusCharacter::WriteSave);
+	PlayerInputComponent->BindAction("QuitGame", IE_Pressed, this, &ACplusplusCharacter::QuitGame);
 
 	PlayerInputComponent->BindAction("GrabObject", IE_Pressed, this, &ACplusplusCharacter::GrabObject);
 	PlayerInputComponent->BindAction("ReleaseObject", IE_Released, this, &ACplusplusCharacter::ReleaseObject);
@@ -96,12 +101,12 @@ void ACplusplusCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 
 void ACplusplusCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+	Jump();
 }
 
 void ACplusplusCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
+	StopJumping();
 }
 
 void ACplusplusCharacter::TurnAtRate(float Rate)
@@ -126,6 +131,7 @@ void ACplusplusCharacter::GrabObject()
 	if (GetWorld()->LineTraceSingleByChannel(hitresult, startVector, endVector, ECC_Visibility, CollisionParams)) {
 		if (hitresult.Actor->IsRootComponentMovable())
 		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), GrabSound, GetActorLocation());
 			SetGrabbedComponent(hitresult.GetComponent());
 			GetGrabbedComponent()->SetEnableGravity(false);
 			GetGrabbedComponent()->AttachToComponent(GetGrabPoint(), FAttachmentTransformRules::FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true));
@@ -137,6 +143,7 @@ void ACplusplusCharacter::GrabObject()
 void ACplusplusCharacter::ReleaseObject(){
 	if (GetGrabbedComponent() != nullptr)
 	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReleaseSound, GetActorLocation());
 		GetGrabbedComponent()->SetEnableGravity(true);
 		GetGrabbedComponent()->DetachFromComponent(FDetachmentTransformRules::FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
 		SetGrabbedComponent(nullptr);
@@ -151,6 +158,7 @@ void ACplusplusCharacter::FirePaintGun()
 	FVector endVector = GetCapsuleComponent()->GetComponentLocation() + (GetCapsuleComponent()->GetForwardVector() * 300.0f);
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), PaintGunShoot, GetActorLocation());
 	if (GetWorld()->LineTraceSingleByChannel(hitresult, startVector, endVector, ECC_Visibility, CollisionParams)){
 		ADecalActor* paintStain = GetWorld()->SpawnActor<ADecalActor>(hitresult.Location, FRotator(90.0f, 0.0f, 0.0f));
 		if(paintStain)
@@ -199,6 +207,12 @@ void ACplusplusCharacter::Respawn()
 	SetActorLocation(spawnPosition);
 	SetActorRotation(spawnRotation);
 	health = 100.0f;
+}
+
+void ACplusplusCharacter::QuitGame()
+{
+	AMyGameModeCplusplus* gamemode = Cast<AMyGameModeCplusplus>(UGameplayStatics::GetGameMode(GetWorld()));
+	gamemode->QuitGame();
 }
 
 void ACplusplusCharacter::SetGrabbedComponent(UPrimitiveComponent* Componenttograb)

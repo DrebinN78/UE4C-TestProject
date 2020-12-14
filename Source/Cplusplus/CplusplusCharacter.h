@@ -4,11 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MySaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Engine/World.h"
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
+#include "MyGameModeCplusplus.h"
+#include "ItemDataTable.h"
+#include "MySaveGame.h"
+#include "AudioManager.h"
 #include "CplusplusCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -24,6 +28,10 @@ class ACplusplusCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Audio, meta = (AllowPrivateAccess = "true"))
+	class UAudioComponent* AudioComponent;
+
 	/** Point where grabbed objects are stored*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Scene, meta = (AllowPrivateAccess = "true"))
 	class USceneComponent* GrabPoint;
@@ -31,18 +39,26 @@ public:
 	ACplusplusCharacter();
  
 	UPrimitiveComponent* GrabbedComponent;
-
-	UPROPERTY(VisibleAnywhere, Category = Character)
-	float health;
-
-	UPROPERTY(VisibleAnywhere, Category = Character)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
 	FVector spawnPosition;
-
-	UPROPERTY(VisibleAnywhere, Category = Character)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
 	FRotator spawnRotation;
 
-	UPROPERTY(EditAnywhere, Category = Character)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+	float health;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+		USoundCue* PaintGunShoot;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+		USoundCue* GrabSound;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+		USoundCue* ReleaseSound;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+		USoundCue* SomeSound;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
 	UMaterialInstance* DecalMaterial;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Character)
+	TArray<UGameItem*> Inventory;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -84,11 +100,13 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void WriteSave();
 
-	UFUNCTION(BlueprintCallable)
-	void LoadFromSave(UMySaveGame* save);
+	
 
 	UFUNCTION(BlueprintCallable)
 	void Respawn();
+
+	UFUNCTION(BlueprintCallable)
+	void QuitGame();
 
 	void SetGrabbedComponent(UPrimitiveComponent* Componenttograb);
 
@@ -108,6 +126,8 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	UFUNCTION(BlueprintCallable)
+	void LoadFromSave(UMySaveGame* save);
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
@@ -116,5 +136,7 @@ public:
 	FORCEINLINE class USceneComponent* GetGrabPoint() const { return GrabPoint; }
 	/** Returns Grabbed Component**/
 	FORCEINLINE class UPrimitiveComponent* GetGrabbedComponent() const { return GrabbedComponent; }
+	/** Returns Audio Component**/
+	FORCEINLINE class UAudioComponent* GetAudioComponent() const { return AudioComponent; }
 };
 
